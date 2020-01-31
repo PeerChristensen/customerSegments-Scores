@@ -1,0 +1,109 @@
+---
+title: "Kundesegmentering"
+author: "Peer Christensen<br>pech@saxo.com"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: tactile
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message=F,warning=F,cache =T)
+```
+
+Da vi ønsker at segmentere kunder på flere måder, implementeres en samlet løsning hvor der både anvendes forskellige metoder og datagrundlag.
+
+### RFMTS definitioner
+
+Samlet set, er følgende datakomponenter sat i spil:
+
+- Recency - dage siden sidste køb
+- Frequency - hvor ofte en kunde har foretaget køb
+- Monetary value - den samlede værdi af købene (DB2)
+- Tenure - hvor mange dage kunden har vøret kunde
+- Streaming - hvor oftekunden benytter streaming
+
+For alle komponenter undtagen Tenure, bruges data fra d. d. og et år bagud.
+
+### Metode 1: Scoring af individuelle komponenter
+
+For hver kunde laves en score fra 1 til 4 for hvert komponent. Dette gøres ved at inddele kunderne i kvartiler. Eksempelvis får de 25% af kunderne med højeste købsfrekvens en Frequency score på 4.
+Dette giver en ligelig fordeling af kunder på score 1-4. Ulempen er dog, at en "høj" 3'er kan ligne en "lav" 4'er osv.
+
+På basis af disse scores, laves yderligere to kombinerede scores:
+
+- RFM (R + F + M) hvor minimumsscoren er 3 og maksimum er 12
+- RFMS (4-16)
+
+### Metode 2: K-means clustering
+
+For hver kundetype (BTB, BTC..) laves en segmentering på baggrund af de oprindelige RFMTS komponenter (ikke 1-4 scores).
+
+Metoden kaldes K-means clustering og er en såkaldt unsupervised machine learning algoritme.
+
+Ved en iterativ proces, finder algoritmen de optimale positioner for såkaldte centroider således at de til sidst er placeret i centrum for hvert segmentklynge. Hvert datapunkt kommer derved til at høre til nærmeste centroide. Dermed er segmenterne dannet.
+
+Antallet af segmenter kan defineres på forhånd, men i vores tilfælde, er det optimale antal segmenter defineret på baggrund af variansen i hvert segment. Eftersom variansen falder jo flere segmenter man har, anvendes netop det antal segmenter hvor tilføjelsen af et ekstra segment ikke i væsentlig grad mindsker den totale varians.
+
+I eksemplet nedenunder, bliver det optimale antal segmenter = 3, eftersom tilføjelsen af et fjerde segment kun leder til et mindre fald i den totale varians. Man leder altså efter "albuen" på denne type graf. At der er en ekstra albue ved 6 segmenter, gør det hele lidt mere lakrids, men generelt er et mindre antal segmenter at foretrække.
+
+```{r}
+library(tidyverse)
+
+scree <- read_csv("data_for_scree_example.csv")
+
+scree %>%
+  ggplot(aes(n_clusters,wss_h2o)) +
+  geom_line(size=1) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "varians (weighted sum of squares)", x = "antal segmenter")
+```
+
+
+### Segmenternes centroider
+
+I graferne nedenfor, kan man se centroiderne, altså den gennemsnitlige kundeprofil i hvert segment inden for hver kundetype. Da datakomponenterne ikke er på samme skala, er værdierne på y-aksen skalerede.
+
+Vi ser bl.a. at BTC kunderne opdeles i tre segmenter. BTC segment 2 har højeste købsfrekvens og værdi, men streamer mindre end segment 3. BTC segment 1 består af de mindst værdifulde kunder.
+
+```{r}
+library(ggthemes)
+
+km_centers <- read_csv("km_centers_example.csv")
+
+km_centers %>%
+  rename(R = recencydays, `F` = frequency, M = monetary, T = tenure, S = streaming) %>%
+  pivot_longer(cols=R:S) %>%
+  mutate(centroid = factor(centroid)) %>%
+  mutate(name = fct_relevel(name, "R", "F", "M", "T", "S")) %>%
+  ggplot(aes(name,value, colour=centroid, group=centroid)) +
+  geom_line(size = 1.5) +
+  geom_point(size = 2) +
+  facet_wrap(~type) +
+  theme_minimal() +
+  labs(colour = "Segment") +
+  scale_colour_tableau() +
+  theme(axis.title = element_blank(),
+        legend.position = "top")
+```
+
+
+### Output
+
+Eksempler på de samlede scores og segmenter kan ses i tabellen her:
+
+```{r}
+output <- read_csv( "example_output_segments.csv")
+
+output %>%
+  sample_n(5) %>%
+  kableExtra::kable() %>%
+  kableExtra::kable_styling()
+```
+
+
+
+
+
