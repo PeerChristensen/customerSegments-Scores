@@ -4,22 +4,25 @@
 library(tictoc)
 
 tic()
-source("individual_scores.R")
+source("individual_scores_update.R")
 toc()
 
 tic()
-source("kmeans_predict.R")
+source("kmeans_predict_update.R")
 toc()
+
 # join
 
-output <- rfmts %>%
+output <- df %>%
+  mutate(Type = as.character(Type)) %>%
   left_join(km_results) %>%
-  select(Customer_Key,Type,Cluster,everything()) %>%
-  rename(Recency = R_Quantile, Frequency = F_Quantile, Monetary = M_Quantile,
-         Tenure = T_Quantile, Streaming = S_Quantile,RFMscore = RFM_score,
-         RFMSscore = RFMS_score, Segment = Cluster)
+  select(Customer_Key,Type,Cluster,Recency,Frequency,Monetary,Tenure,Streaming,RFM_score,
+         RFMS_score) %>%
+  rename(Segment = Cluster)
 
 
-sqlSave(channel,output, tablename = "customerSegmentation2020",rownames = F,safer=F)
+sqlSave(channel,output, tablename = "customerSegmentationOutput",rownames = F,safer=F)
 
 close(channel)
+
+h2o.shutdown()

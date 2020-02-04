@@ -6,8 +6,6 @@ library(recipes)
 library(h2o)
 library(ggthemes)
 
-h2o.init(nthreads = -1)
-
 rfmts_km <- df %>%
   select(Customer_Key,Type,Recency_km = RecencyDays, 
          Frequency_km = Orders, Monetary_km = DB2,
@@ -49,23 +47,23 @@ for (type in unique(rfmts_km$Type)) {
   
   h2o.saveModel(km,path = glue::glue("models/{type}"))
   
-km@model$centers %>%
-    as_tibble() %>%
-    mutate(Customer_Segment_km = centroid) %>%
-    select(-centroid) %>%
-    gather(metric, value, -Customer_Segment_km) %>%
-    group_by(Customer_Segment_km,metric) %>%
-    ungroup() %>%
-    mutate(metric = fct_relevel(metric, "recencydays","frequency","monetary","tenure","streaming")) %>%
-    ggplot(aes(x=factor(metric),y=value,group=Customer_Segment_km,colour = Customer_Segment_km)) +
-    geom_line(size=1.5) +
-    geom_point(size=2) +
-    ylim(-2,2) +
-    theme_light() +
-    scale_colour_tableau() +
-    theme(legend.title = element_blank())
-
-ggsave(glue::glue("{type}.png"))
+  # km@model$centers %>%
+  #   as_tibble() %>%
+  #   mutate(Customer_Segment_km = centroid) %>%
+  #   select(-centroid) %>%
+  #   gather(metric, value, -Customer_Segment_km) %>%
+  #   group_by(Customer_Segment_km,metric) %>%
+  #   ungroup() %>%
+  #   mutate(metric = fct_relevel(metric, "recencydays","frequency","monetary","tenure","streaming")) %>%
+  #   ggplot(aes(x=factor(metric),y=value,group=Customer_Segment_km,colour = Customer_Segment_km)) +
+  #   geom_line(size=1.5) +
+  #   geom_point(size=2) +
+  #   ylim(-2,2) +
+  #   theme_light() +
+  #   scale_colour_tableau() +
+  #   theme(legend.title = element_blank())
+  
+  #ggsave(glue::glue("{type}.png"))
   
   cluster <- h2o.predict(km,km_training) %>% as_tibble() 
   
