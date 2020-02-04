@@ -39,8 +39,8 @@ for (type in unique(rfmts_km$Type)) {
   km_training <- as.h2o(rfmts_norm)
   x = names(km_training)
   
-  file <- list.files(glue::glue("models/{type}"))
-  model_path <- glue::glue("models/{type}/{file}")
+  file <- list.files(glue::glue("D:/R/RScripts/customerSegments_Scores/models/{type}"))
+  model_path <- glue::glue("D:/R/RScripts/customerSegments_Scores/models/{type}/{file}")
   
   km <- h2o.loadModel(model_path)
   

@@ -4,11 +4,11 @@
 library(tictoc)
 
 tic()
-source("individual_scores_update.R")
+source("D:/R/RScripts/customerSegments_Scores/individual_scores_update.R")
 toc()
 
 tic()
-source("kmeans_predict_update.R")
+source("D:/R/RScripts/customerSegments_Scores/kmeans_predict_update.R")
 toc()
 
 # join
