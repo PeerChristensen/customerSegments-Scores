@@ -12,7 +12,6 @@ source("kmeans_predict_update.R")
 toc()
 
 # join
-
 output <- df %>%
   mutate(Type = as.character(Type)) %>%
   left_join(km_results) %>%
@@ -20,9 +19,15 @@ output <- df %>%
          RFMS_score) %>%
   rename(Segment = Cluster)
 
+# save to SQL
+channel <-odbcConnect("saxo034", uid="R", pwd="sql2017")
 
-sqlSave(channel,output, tablename = "customerSegmentationOutput",rownames = F,safer=F)
+sqlquery <- "TRUNCATE TABLE DataMartMisc.dbo.customerSegmentationOutput"
+
+sqlQuery(channel, sqlquery)
+
+sqlSave(channel, output, tablename = "dbo.customerSegmentationOutput",
+        append=TRUE, fast = FALSE, rownames = FALSE)
 
 close(channel)
 
-h2o.shutdown()

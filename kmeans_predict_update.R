@@ -6,8 +6,6 @@ library(recipes)
 library(h2o)
 library(ggthemes)
 
-h2o.init(nthreads = -1)
-
 rfmts_km <- df %>%
   select(Customer_Key,Type,Recency_km = RecencyDays, 
          Frequency_km = Orders, Monetary_km = DB2,
