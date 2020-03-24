@@ -1,10 +1,9 @@
 # individual scores update
 
-
-
 # customer scores
 # january 2020
 # Peer Christensen
+# -----------------------------------------------------------
 
 library(RODBC)
 library(lubridate)
@@ -12,6 +11,8 @@ library(tidyverse)
 
 # -----------------------------------------------------------
 # get the data
+# -----------------------------------------------------------
+
 
 #credentials <- read_rds("credentials.rds")
 
@@ -34,6 +35,8 @@ df <- df %>%
   mutate(FirstOrderDate = ymd(FirstOrderDate),
          LatestOrderDate = ymd(LatestOrderDate))
 
+# ------------------------------------------------------------
+# Calculate scores
 # ------------------------------------------------------------
 
 df <- df %>%

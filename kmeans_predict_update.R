@@ -1,17 +1,24 @@
-# customer K-means training
+# customer K-means - predict
 # january 2020
 # Peer Christensen
+# -----------------------------------------------------------
 
 library(recipes)
 library(h2o)
 library(ggthemes)
 
+# ------------------------------------------------------------
+# Prepare RFMTS data
+# ------------------------------------------------------------
 rfmts_km <- df %>%
   select(Customer_Key,Type,Recency_km = RecencyDays, 
          Frequency_km = Orders, Monetary_km = DB2,
          Tenure_km = Duration, Streaming_km = Buckets) %>%
   mutate(Tenure_km = as.numeric(Tenure_km))
 
+# ------------------------------------------------------------
+# K-means for each customer type with H20
+# ------------------------------------------------------------
 
 km_results <- tibble()
 
@@ -21,8 +28,10 @@ for (type in unique(rfmts_km$Type)) {
     filter(Type == type) %>%
     select(-Type)
   
+  # save customer keys
   Customer_Key <- rfmts_km_type %>% pull(Customer_Key)
   
+  # define recipe for preprocessing the data
   rfmts_recipe <- rfmts_km_type %>%
     select(ends_with("_km")) %>%
     recipe() %>%
@@ -31,6 +40,7 @@ for (type in unique(rfmts_km$Type)) {
     step_scale(all_numeric()) %>%
     prep(data = train_data)
   
+  # apply the recipe
   rfmts_norm <- bake(rfmts_recipe, new_data = rfmts_km_type)
   
   # kmeans with H2O
@@ -39,12 +49,13 @@ for (type in unique(rfmts_km$Type)) {
   km_training <- as.h2o(rfmts_norm)
   x = names(km_training)
   
+  # load model
   file <- list.files(glue::glue("D:/R/RScripts/customerSegments_Scores/models/{type}"))
   model_path <- glue::glue("D:/R/RScripts/customerSegments_Scores/models/{type}/{file}")
   
   km <- h2o.loadModel(model_path)
   
-  
+  # predict on current data
   cluster <- h2o.predict(km,km_training) %>% as_tibble() 
   
   rfmts_clusters <- tibble(Cluster = factor(cluster$predict+1)) %>% 

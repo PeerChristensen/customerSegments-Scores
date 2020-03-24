@@ -1,17 +1,41 @@
-# run scripts
-# ca. 37 sekunder
 
-library(tictoc)
+# Kundesegmentering og scores (RFMTS)
+# Peer CHristensen
+# Februar 2020
+# ---------------------------------------------------------------------------------
 
-tic()
+# RFMTS segmentering og individuelle scores (kvartiler, 1-4) grupperet efter kundetype
+
+# output:
+# kunde id	
+# kundetype	(BTC, BTB..)
+# RFMTS segment via K-means clustering
+# Recency score	- 4 = høj recency (kunder der har købt for nyligt)
+# Frequency score	- købsfrekvens, 4 = høj
+# Monetary value score - kundens værdi (DB2), 4 = høj	
+# Tenure score - varighed af medlemsskab 
+# Streaming score	- streamingfrekvens, 4 = høj
+# RFM score	- R + F + M, min. = 3, max = 12
+# RFMS score - R + F + M + S, min. = 4, max. = 16	
+# ---------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------
+# Individuelle og kombinerede scores
+# ---------------------------------------------------------------------------------
+
 source("D:/R/RScripts/customerSegments_Scores/individual_scores_update.R")
-toc()
 
-tic()
+# ---------------------------------------------------------------------------------
+# K-means Clustering
+# ---------------------------------------------------------------------------------
+
 source("D:/R/RScripts/customerSegments_Scores/kmeans_predict_update.R")
-toc()
 
-# join
+# ---------------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------------
+
+# join data
 output <- df %>%
   mutate(Type = as.character(Type)) %>%
   left_join(km_results) %>%
