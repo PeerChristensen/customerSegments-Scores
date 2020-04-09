@@ -40,6 +40,7 @@ df <- df %>%
 # ------------------------------------------------------------
 
 df <- df %>%
+  group_by(Segment) %>%
   mutate(RecencyDays = as.numeric(today() - LatestOrderDate),
          Duration    = today() - FirstOrderDate) %>%
   mutate(Recency     = ntile(desc(RecencyDays), 4),
@@ -47,10 +48,10 @@ df <- df %>%
          Monetary    = ntile(DB2, 4),
          Tenure      = ntile(Duration, 4),
          Streaming   = ntile(Buckets, 4)) %>%
-  mutate(RFM_score   = Recency+Frequency+Monetary,
-         RFMS_score  = Recency+Frequency+Monetary+Streaming) %>%
-  select(Customer_Key, Type = Segment, everything())
-
+  mutate(RFM_score   = (Recency+Frequency+Monetary) / 3,
+         RFMS_score  = (Recency+Frequency+Monetary+Streaming)/4) %>%
+  select(Customer_Key, Type = Segment, everything()) %>%
+  ungroup()
 
 
 
