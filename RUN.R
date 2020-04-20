@@ -39,11 +39,18 @@ source("D:/R/RScripts/customerSegments_Scores/individual_scores_update.R")
 # #                       RFMTS_score >= 10 & RFMTS_score <= 14 ~ "Silver",
 # #                       RFMTS_score >= 15 ~ "Gold"))
 #or Segment = #ntile(RFMTS_score,3))
+
 # ---------------------------------------------------------------------------------
 # K-means Clustering
 # ---------------------------------------------------------------------------------
 
 source("D:/R/RScripts/customerSegments_Scores/kmeans_predict_update.R")
+
+# ---------------------------------------------------------------------------------
+# Principal components
+# ---------------------------------------------------------------------------------
+
+#source("D:/R/RScripts/customerSegments_Scores/principal_components.R")
 
 # ---------------------------------------------------------------------------------
 # Output
@@ -54,6 +61,7 @@ output <- df %>%
   ungroup() %>%
   mutate(Type = as.character(Type)) %>%
   left_join(km_results) %>%
+ # left_join(pca) %>% + select pc1,pc2
   select(Customer_Key,Type,Cluster,Recency,Frequency,Monetary,Tenure,Streaming,RFM_score,
          RFMS_score) %>%
   rename(Segment = Cluster)

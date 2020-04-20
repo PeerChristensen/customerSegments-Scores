@@ -3,6 +3,8 @@
 # Peer Christensen
 # -----------------------------------------------------------
 
+options(warn = -1)
+
 library(recipes)
 library(h2o)
 library(ggthemes)
@@ -10,6 +12,7 @@ library(ggthemes)
 # ------------------------------------------------------------
 # Prepare RFMTS data
 # ------------------------------------------------------------
+
 rfmts_km <- df %>%
   select(Customer_Key,Type,Recency_km = RecencyDays, 
          Frequency_km = Orders, Monetary_km = DB2,
